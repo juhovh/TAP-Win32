@@ -1739,6 +1739,13 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
 		&& icmp6->type == ICMPV6_ROUTER_SOLICITATION
 		&& icmp6->code == 0)
 	  {
+	    const int optlen = l_PacketLength
+	      - sizeof (ETH_HEADER)
+	      - sizeof (IPV6HDR)
+	      - sizeof (ICMPV6_NS);
+
+	    if (ProcessNDRouterSolicitation (l_Adapter, eth, ip6, icmp6, optlen))
+	      goto no_queue;
 	  }
 
 	// DHCPv6 packet?

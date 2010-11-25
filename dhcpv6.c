@@ -22,6 +22,23 @@
  *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+BOOLEAN
+ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
+			     const ETH_HEADER *eth,
+			     const IPV6HDR *ip6,
+			     const ICMPV6_NS *icmp6,
+			     int optlen)
+{
+  // Check packet according to RFC4861 6.1.1.
+  if (!(ip6->hop_limit != 255
+	|| ip6->payload_len < 8
+	|| icmp6->code != 0)
+	|| (IP6ADDR_EQUAL(ip6->saddr, IP6ADDR_UNSPECIFIED) && optlen))
+    return FALSE;
+
+  return FALSE;
+}
+
 //===================================================================
 // Handle a DHCPv6 packet produced by the local system to
 // resolve the address/netmask of this adapter.
@@ -38,5 +55,5 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
 	       const DHCPV6 *dhcp6,
 	       int optlen)
 {
-  return TRUE;
+  return FALSE;
 }

@@ -35,6 +35,9 @@ typedef unsigned char MACADDR [6];
 typedef unsigned long IPADDR;
 typedef unsigned char IPV6ADDR [16];
 
+#define IPV6ADDR_UNSPECIFIED  {{{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }}}
+#define IPV6ADDR_EQUAL(a,b)   (memcmp ((a), (b), sizeof (IP6ADDR)) == 0)
+
 //-----------------
 // Ethernet address
 //-----------------
