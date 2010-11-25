@@ -22,6 +22,34 @@
  *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+USHORT
+ipv6_checksum (const UCHAR *buf,
+	       const int buf_len,
+	       const IP6HDR *ip6)
+{
+  int i, checksum = 0;
+
+  // Add IPv6 pseudo header into the checksum
+  for (i = 0; i < sizeof (IP6ADDR); ++i)
+    {
+      checksum += ip6->saddr[i] << ((i%2 == 0)?8:0);
+      checksum += ip6->daddr[i] << ((i%2 == 0)?8:0);
+    }
+  checksum += ip6->payload_len;
+  checksum += ip6->next_header;
+
+  // Calculate checksum over the actual data
+  for (i = 0; i < buf_len; ++i)
+    checksum += buf[i] << ((i%2 == 0)?8:0);
+
+  // Finalize checksum
+  if (checksum > 0xffff)
+    checksum = (checksum & 0xffff) + (checksum >> 16);
+  checksum = ~checksum;
+
+  return (USHORT) checksum;
+}
+
 BOOLEAN
 ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 			     const ETH_HEADER *eth,
@@ -44,6 +72,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
   if (pkt)
     {
       int i;
+      USHORT checksum;
 
       //--------------------------------------------
       // Build ICMPv6 ND Router Advertisement packet
@@ -70,9 +99,9 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.code = 0;
       pkt->radv.cur_hop_limit = 0;       // Unspecified
       pkt->radv.flags = 0xc0;            // Managed | Other
-      pkt->radv.router_lifetime = 1800;  // FIXME: Some reason for this value
-      pkt->radv.reachable_time = 0;
-      pkt->radv.retrans_timer = 0;
+      pkt->radv.router_lifetime = htons (1800);  // FIXME: Some reason for this value
+      pkt->radv.reachable_time = htonl (0);
+      pkt->radv.retrans_timer = htonl (0);
 
       // Build ICMPv6 ND Router Advertisement options
 
@@ -84,10 +113,10 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.pi_len = 4;
       pkt->radv.pi_prefixlen = p_Adapter->m_dhcpv6_prefixlen;
       pkt->radv.pi_flags = 0;  // On-link undefined, not autonomous
-      pkt->radv.pi_valid_lifetime = p_Adapter->m_dhcpv6_lease_time;
-      pkt->radv.pi_preferred_lifetime = p_Adapter->m_dhcpv6_lease_time;
+      pkt->radv.pi_valid_lifetime = htonl (p_Adapter->m_dhcpv6_lease_time);
+      pkt->radv.pi_preferred_lifetime = htonl (p_Adapter->m_dhcpv6_lease_time);
       COPY_IP6ADDR (pkt->radv.pi_prefix, p_Adapter->m_dhcpv6_addr);
-      for (i = 0; i < 128; ++i)
+      for (i = p_Adapter->m_dhcpv6_prefixlen; i < 128; ++i)
         {
           // Zero all host bits in prefix as required
           pkt->radv.pi_prefix[i/8] &= ~(0x80 >> (i%8));
@@ -96,6 +125,12 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.mtu_type = 5;
       pkt->radv.mtu_len = 1;
       pkt->radv.mtu_value = htonl (p_Adapter->m_dhcpv6_mtu);
+
+      // Calculate the ICMPv6 checksum
+      checksum = ipv6_checksum ((UCHAR *) &(pkt->radv),
+                                sizeof (ICMP6NDRA),
+                                &pkt->ip6);
+      pkt->radv.checksum = htons (checksum);
 
       InjectPacketDeferred (p_Adapter,
                             (UCHAR *) pkt,
