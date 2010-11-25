@@ -54,6 +54,11 @@
 /* obsoletes TAP_IOCTL_CONFIG_POINT_TO_POINT */
 #define TAP_IOCTL_CONFIG_TUN            TAP_CONTROL_CODE (10, METHOD_BUFFERED)
 
+// Added in 9.8
+
+#define TAP_IOCTL_CONFIG_DHCPV6_MASQ    TAP_CONTROL_CODE (11, METHOD_BUFFERED)
+#define TAP_IOCTL_CONFIG_DHCPV6_SET_OPT TAP_CONTROL_CODE (12, METHOD_BUFFERED)
+
 //=================
 // Registry keys
 //=================
