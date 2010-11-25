@@ -1718,6 +1718,57 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
 	  }
       }
 
+    //=====================================================
+    // Are we running in DHCPv6 server masquerade mode?
+    //
+    // If so, catch both DHCPv6 requests and ND queries
+    // to resolve the address of our virtual DHCP server.
+    //=====================================================
+    if (l_Adapter->m_dhcpv6_enabled)
+      {
+	const ETH_HEADER *eth = (ETH_HEADER *) l_PacketBuffer->m_Data;
+	const IPV6HDR *ip6 = (IPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER));
+	const UDPHDR *udp = (UDPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IPV6HDR));
+	const ICMPV6_NS *icmp6 = (ICMPV6_NS *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IPV6HDR));
+
+	// ICMPv6 Router Advertisement packet?
+	if (l_PacketLength >= sizeof (ETH_HEADER) + sizeof (IPV6HDR) + sizeof (ICMPV6_NS)
+		&& eth->proto == htons (ETH_P_IPV6)
+		&& IPH_GET_VER (ip6->version_traffic) == 0x6 // IPv6
+		&& ip6->next_header == IPPROTO_ICMPV6
+		&& icmp6->type == ICMPV6_ROUTER_ADVERTISEMENT
+		&& icmp6->code == 0)
+	  {
+	  }
+
+	// DHCPv6 packet?
+	else if (l_PacketLength >= sizeof (ETH_HEADER) + sizeof (IPHDR) + sizeof (UDPHDR) + sizeof (DHCPV6HDR)
+		 && eth->proto == htons (ETH_P_IPV6)
+		 && IPH_GET_VER (ip6->version_traffic) == 0x6 // IPv6
+		 && ip6->next_header == IPPROTO_UDP
+		 && udp->dest == htons (DHCPV6_SERVER_PORT))
+	  {
+	    const DHCPV6HDR *dhcp6 = (DHCPV6HDR *) (l_PacketBuffer->m_Data
+						    + sizeof (ETH_HEADER)
+						    + sizeof (IPV6HDR)
+						    + sizeof (UDPHDR));
+
+	    const int optlen = l_PacketLength
+	      - sizeof (ETH_HEADER)
+	      - sizeof (IPV6HDR)
+	      - sizeof (UDPHDR)
+	      - sizeof (DHCPV6HDR);
+
+	    if (optlen > 0) // we must have at least one DHCP option
+	      {
+		if (ProcessDHCPv6 (l_Adapter, eth, ip, udp, dhcp, optlen))
+		  goto no_queue;
+	      }
+	    else
+	      goto no_queue;
+	  }
+      }
+
     //===============================================
     // In Point-To-Point mode, check to see whether
     // packet is ARP (handled) or IPv4 (sent to app).

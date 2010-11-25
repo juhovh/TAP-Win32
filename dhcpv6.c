@@ -22,4 +22,21 @@
  *  59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+//===================================================================
+// Handle a DHCPv6 packet produced by the local system to
+// resolve the address/netmask of this adapter.
+// If we are in TAP_IOCTL_CONFIG_DHCPV6_MASQ mode, reply
+// to the message.  Return TRUE if we processed the passed
+// message, so that downstream stages can ignore it.
+//===================================================================
 
+BOOLEAN
+ProcessDHCPv6 (TapAdapterPointer p_Adapter,
+	       const ETH_HEADER *eth,
+	       const IPV6HDR *ip6,
+	       const UDPHDR *udp,
+	       const DHCPV6 *dhcp6,
+	       int optlen)
+{
+  return TRUE;
+}

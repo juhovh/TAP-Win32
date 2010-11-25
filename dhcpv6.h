@@ -35,14 +35,19 @@
 // UDP port numbers of DHCPv6 messages.
 //=====================================
 
-#define DHCPV6_SERVER_PORT 67
-#define DHCPV6_CLIENT_PORT 68
+#define DHCPV6_SERVER_PORT 546
+#define DHCPV6_CLIENT_PORT 546
 
 //=============================
 // The DHCPv6 message structure
 //=============================
 
-
+typedef struct {
+#define DHCPV6_GET_ID(s) (((s)->hid << 16) | (s)->lid)
+  UCHAR  type;
+  UCHAR  hid;
+  USHORT lid;
+} DHCPV6HDR;
 
 #pragma pack()
 
