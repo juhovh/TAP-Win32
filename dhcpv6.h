@@ -38,6 +38,44 @@
 #define DHCPV6_SERVER_PORT 546
 #define DHCPV6_CLIENT_PORT 546
 
+#pragma pack()
+
+//=============================================
+// The ICMPv6 ND Router Advertisement structure
+//=============================================
+
+typedef struct {
+  UCHAR   type;
+  UCHAR   code;
+  USHORT  checksum;
+  UCHAR   hop_limit;
+  UCHAR   flags;
+  USHORT  router_lifetime;
+  ULONG   reachable_time;
+  ULONG   retrans_timer;
+
+  // Source link-layer address option
+  UCHAR   slla_type;
+  UCHAR   slla_len;
+  MACADDR slla_value;
+
+  // Prefix information option
+  UCHAR   pi_type;
+  UCHAR   pi_len;
+  UCHAR   pi_prefix_len;
+  UCHAR   pi_flags;
+  ULONG   pi_valid_lifetime;
+  ULONG   pi_preferred_lifetime;
+  ULONG   pi_reserved;
+  IP6ADDR pi_prefix;
+
+  // MTU option
+  UCHAR   mtu_type;
+  UCHAR   mtu_len;
+  USHORT  mtu_reserved;
+  ULONG   mtu_value;
+} ICMP6NDRA;
+
 //=============================
 // The DHCPv6 message structure
 //=============================
@@ -48,8 +86,6 @@ typedef struct {
   UCHAR  hid;
   USHORT lid;
 } DHCP6;
-
-#pragma pack()
 
 //====================
 // DHCPv6 Option types

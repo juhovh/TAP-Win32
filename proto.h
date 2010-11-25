@@ -34,6 +34,9 @@ typedef unsigned char MACADDR [6];
 typedef unsigned long IPADDR;
 typedef unsigned char IP6ADDR [16];
 
+#define IP6ADDR_UNSPECIFIED  {{{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }}}
+#define IP6ADDR_EQUAL(a,b)   (memcmp ((a), (b), sizeof (IP6ADDR)) == 0)
+
 //-----------------
 // Ethernet address
 //-----------------
@@ -140,7 +143,7 @@ typedef struct {
 } IP6HDR;
 
 //--------------
-// ICMPv6 header
+// ICMPv6 packet
 //--------------
 
 typedef struct {
@@ -149,7 +152,8 @@ typedef struct {
   UCHAR    type;
   UCHAR    code;
   USHORT   checksum;
-} ICMP6HDR;
+  ULONG    reserved;
+} ICMP6;
 
 //-----------
 // UDP header

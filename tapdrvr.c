@@ -1577,16 +1577,23 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
 	const ETH_HEADER *eth = (ETH_HEADER *) l_PacketBuffer->m_Data;
 	const IP6HDR *ip6 = (IP6HDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER));
 	const UDPHDR *udp = (UDPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IP6HDR));
-	const ICMP6HDR *icmp6 = (ICMP6HDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IP6HDR));
+	const ICMP6 *icmp6 = (ICMP6 *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IP6HDR));
 
 	// ICMPv6 Router Solicitation packet?
-	if (l_PacketLength >= sizeof (ETH_HEADER) + sizeof (IP6HDR) + sizeof (ICMP6HDR)
+	if (l_PacketLength >= sizeof (ETH_HEADER) + sizeof (IP6HDR) + sizeof (ICMP6)
 		&& eth->proto == htons (ETH_P_IPV6)
 		&& IPH_GET_VER (ip6->version_traffic) == 0x6 // IPv6
 		&& ip6->next_header == IPPROTO_ICMPV6
 		&& icmp6->type == ICMPV6_ROUTER_SOLICITATION
 		&& icmp6->code == 0)
 	  {
+	    const int optlen = l_PacketLength
+	      - sizeof (ETH_HEADER)
+	      - sizeof (IP6HDR)
+	      - sizeof (ICMP6);
+
+	    if (ProcessNDRouterSolicitation (l_Adapter, eth, ip6, icmp6, optlen))
+	      goto no_queue;
 	  }
 
 	// DHCPv6 packet?
