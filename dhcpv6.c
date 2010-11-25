@@ -35,7 +35,7 @@ ipv6_checksum (const UCHAR *buf,
       checksum += ip6->saddr[i] << ((i%2 == 0)?8:0);
       checksum += ip6->daddr[i] << ((i%2 == 0)?8:0);
     }
-  checksum += ip6->payload_len;
+  checksum += ntohs (ip6->payload_len);
   checksum += ip6->next_header;
 
   // Calculate checksum over the actual data
