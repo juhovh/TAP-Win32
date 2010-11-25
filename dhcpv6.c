@@ -58,7 +58,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       // Build IPv6 header
 
       pkt->ip6.version_traffic = (6 << 4);
-      pkt->ip6.payload_len = htons (sizeof (ICMPV6NDRA));
+      pkt->ip6.payload_len = htons (sizeof (ICMP6NDRA));
       pkt->ip6.next_header = IPPROTO_ICMPV6;
       pkt->ip6.hop_limit = 255;
       COPY_IP6ADDR (pkt->ip6.saddr, p_Adapter->m_dhcpv6_server_ip);
@@ -72,7 +72,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.flags = 0xc0;            // Managed | Other
       pkt->radv.router_lifetime = 1800;  // FIXME: Some reason for this value
       pkt->radv.reachable_time = 0;
-      pkt->radv.retran_timer = 0;
+      pkt->radv.retrans_timer = 0;
 
       // Build ICMPv6 ND Router Advertisement options
 
@@ -86,11 +86,11 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.pi_flags = 0;  // On-link undefined, not autonomous
       pkt->radv.pi_valid_lifetime = p_Adapter->m_dhcpv6_lease_time;
       pkt->radv.pi_preferred_lifetime = p_Adapter->m_dhcpv6_lease_time;
-      COPY_IP6ADDR (pkt->radv.prefix, p_Adapter->m_dhcpv6_addr);
+      COPY_IP6ADDR (pkt->radv.pi_prefix, p_Adapter->m_dhcpv6_addr);
       for (i = 0; i < 128; ++i)
         {
           // Zero all host bits in prefix as required
-          pkt->radv.prefix[i/8] &= ~(0x80 >> (i%8));
+          pkt->radv.pi_prefix[i/8] &= ~(0x80 >> (i%8));
         }
 
       pkt->radv.mtu_type = 5;
