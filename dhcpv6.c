@@ -109,6 +109,13 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.slla_len = 1;
       COPY_MAC (pkt->radv.slla_value, p_Adapter->m_dhcpv6_server_mac);
 
+      pkt->radv.mtu_type = 5;
+      pkt->radv.mtu_len = 1;
+      if (p_Adapter->m_dhcpv6_mtu)
+        pkt->radv.mtu_value = htonl (p_Adapter->m_dhcpv6_mtu);
+      else
+        pkt->radv.mtu_value = htonl (p_Adapter->m_MTU);
+
       pkt->radv.pi_type = 3;
       pkt->radv.pi_len = 4;
       pkt->radv.pi_prefixlen = p_Adapter->m_dhcpv6_prefixlen;
@@ -121,10 +128,6 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
           // Zero all host bits in prefix as required
           pkt->radv.pi_prefix[i/8] &= ~(0x80 >> (i%8));
         }
-
-      pkt->radv.mtu_type = 5;
-      pkt->radv.mtu_len = 1;
-      pkt->radv.mtu_value = htonl (p_Adapter->m_dhcpv6_mtu);
 
       // Calculate the ICMPv6 checksum
       checksum = ipv6_checksum ((UCHAR *) &(pkt->radv),

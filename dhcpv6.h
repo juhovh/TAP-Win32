@@ -57,6 +57,12 @@ typedef struct {
   UCHAR   slla_len;
   MACADDR slla_value;
 
+  // MTU option
+  UCHAR   mtu_type;
+  UCHAR   mtu_len;
+  USHORT  mtu_reserved;
+  ULONG   mtu_value;
+
   // Prefix information option
   UCHAR   pi_type;
   UCHAR   pi_len;
@@ -66,12 +72,6 @@ typedef struct {
   ULONG   pi_preferred_lifetime;
   ULONG   pi_reserved;
   IP6ADDR pi_prefix;
-
-  // MTU option
-  UCHAR   mtu_type;
-  UCHAR   mtu_len;
-  USHORT  mtu_reserved;
-  ULONG   mtu_value;
 } ICMP6NDRA;
 
 typedef struct {
