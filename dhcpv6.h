@@ -38,8 +38,6 @@
 #define DHCPV6_SERVER_PORT 546
 #define DHCPV6_CLIENT_PORT 546
 
-#pragma pack()
-
 //=============================================
 // The ICMPv6 ND Router Advertisement structure
 //=============================================
@@ -92,6 +90,8 @@ typedef struct {
   UCHAR  hid;
   USHORT lid;
 } DHCP6;
+
+#pragma pack()
 
 //====================
 // DHCPv6 Option types
