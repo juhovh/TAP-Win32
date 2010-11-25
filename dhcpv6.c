@@ -111,7 +111,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 
       pkt->radv.mtu_type = 5;
       pkt->radv.mtu_len = 1;
-      if (p_Adapter->m_dhcpv6_mtu)
+      if (p_Adapter->m_dhcpv6_mtu && p_Adapter->m_dhcpv6_mtu < p_Adapter->m_MTU)
         pkt->radv.mtu_value = htonl (p_Adapter->m_dhcpv6_mtu);
       else
         pkt->radv.mtu_value = htonl (p_Adapter->m_MTU);
