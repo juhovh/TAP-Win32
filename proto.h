@@ -32,6 +32,7 @@
 
 typedef unsigned char MACADDR [6];
 typedef unsigned long IPADDR;
+typedef unsigned char IP6ADDR [16];
 
 //-----------------
 // Ethernet address
@@ -56,6 +57,7 @@ typedef struct
 
 # define ETH_P_IP   0x0800    /* IPv4 protocol */
 # define ETH_P_ARP  0x0806    /* ARP protocol */
+# define ETH_P_IPV6 0x86DD    /* IPv6 protocol */
   USHORT proto;               /* packet type ID field	*/
 } ETH_HEADER, *PETH_HEADER;
 
@@ -116,6 +118,26 @@ typedef struct {
   ULONG    daddr;
   /* The options start here. */
 } IPHDR;
+
+//------------
+// IPv6 Header
+//------------
+
+typedef struct {
+  UCHAR    version_traffic;
+  UCHAR    traffic_flow;
+  USHORT   flow_label;
+  USHORT   payload_len;
+
+#define IPPROTO_ICMPV6  58  /* ICMPv6 protocol */
+  UCHAR    next_header;
+  UCHAR    hop_limit;
+
+  IP6ADDR  saddr;
+  IP6ADDR  daddr;
+
+  /* The options start here. */
+} IP6HDR;
 
 //-----------
 // UDP header
