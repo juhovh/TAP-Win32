@@ -144,7 +144,8 @@ typedef struct {
 //--------------
 
 typedef struct {
-# define ICMPV6_ROUTER_ADVERTISEMENT
+# define ICMPV6_ROUTER_SOLICITATION  133
+# define ICMPV6_ROUTER_ADVERTISEMENT 134
   UCHAR    type;
   UCHAR    code;
   USHORT   checksum;
