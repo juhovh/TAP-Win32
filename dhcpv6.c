@@ -97,11 +97,11 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 
       pkt->radv.type = ICMPV6_ROUTER_ADVERTISEMENT;
       pkt->radv.code = 0;
-      pkt->radv.cur_hop_limit = 0;       // Unspecified
-      pkt->radv.flags = 0xc0;            // Managed | Other
-      pkt->radv.router_lifetime = htons (1800);  // FIXME: Some reason for this value
-      pkt->radv.reachable_time = htonl (0);
-      pkt->radv.retrans_timer = htonl (0);
+      pkt->radv.cur_hop_limit = 0;            // Unspecified (default)
+      pkt->radv.flags = 0xc0;                 // Managed | Other
+      pkt->radv.router_lifetime = htons (0);  // Do not route packets
+      pkt->radv.reachable_time = htonl (0);   // Unspecified (default)
+      pkt->radv.retrans_timer = htonl (0);    // Unspecified (default)
 
       // Build ICMPv6 ND Router Advertisement options
 
@@ -112,7 +112,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       pkt->radv.pi_type = 3;
       pkt->radv.pi_len = 4;
       pkt->radv.pi_prefixlen = p_Adapter->m_dhcpv6_prefixlen;
-      pkt->radv.pi_flags = 0;  // On-link undefined, not autonomous
+      pkt->radv.pi_flags = 0x80;  // On-link prefix, not autonomous
       pkt->radv.pi_valid_lifetime = htonl (p_Adapter->m_dhcpv6_lease_time);
       pkt->radv.pi_preferred_lifetime = htonl (p_Adapter->m_dhcpv6_lease_time);
       COPY_IP6ADDR (pkt->radv.pi_prefix, p_Adapter->m_dhcpv6_addr);
