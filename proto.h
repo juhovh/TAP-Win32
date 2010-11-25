@@ -34,7 +34,6 @@ typedef unsigned char MACADDR [6];
 typedef unsigned long IPADDR;
 typedef unsigned char IP6ADDR [16];
 
-#define IP6ADDR_UNSPECIFIED  {{{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 }}}
 #define IP6ADDR_EQUAL(a,b)   (memcmp ((a), (b), sizeof (IP6ADDR)) == 0)
 
 //-----------------

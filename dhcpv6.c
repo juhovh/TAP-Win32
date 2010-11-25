@@ -29,11 +29,13 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 			     const ICMP6 *icmp6,
 			     int optlen)
 {
+  IP6ADDR unspecified = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+
   // Check packet according to RFC4861 6.1.1.
   if (!(ip6->hop_limit != 255
 	|| ip6->payload_len < 8
 	|| icmp6->code != 0)
-	|| (IP6ADDR_EQUAL(ip6->saddr, IP6ADDR_UNSPECIFIED) && optlen))
+	|| (IP6ADDR_EQUAL(ip6->saddr, unspecified) && optlen))
     return FALSE;
 
   return FALSE;
