@@ -82,6 +82,7 @@
 #include "error.h"
 #include "endian.h"
 #include "dhcp.h"
+#include "dhcpv6.h"
 #include "types.h"
 #include "prototypes.h"
 
@@ -89,6 +90,7 @@
 #include "macinfo.c"
 #include "error.c"
 #include "dhcp.c"
+#include "dhcpv6.c"
 #include "instance.c"
 
 #define IS_UP(ta) \

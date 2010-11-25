@@ -159,6 +159,18 @@ typedef struct _TapAdapter
   BOOLEAN m_dhcp_received_discover;
   ULONG m_dhcp_bad_requests;
 
+  // Used for DHCPv6 server masquerade
+  BOOLEAN m_dhcpv6_enabled;
+  IPV6ADDR m_dhcpv6_addr;
+  UCHAR m_dhcpv6_prefixlen;
+  BOOLEAN m_dhcpv6_server_radv;
+  MACADDR m_dhcpv6_server_mac;
+  ULONG m_dhcpv6_lease_time;
+  UCHAR m_dhcpv6_user_supplied_options_buffer[DHCPV6_USER_SUPPLIED_OPTIONS_BUFFER_SIZE];
+  ULONG m_dhcpv6_user_supplied_options_buffer_len;
+  BOOLEAN m_dhcpv6_received_solicit;
+  ULONG m_dhcpv6_bad_requests;
+
   // Help to tear down the adapter by keeping
   // some state information on allocated
   // resources.
