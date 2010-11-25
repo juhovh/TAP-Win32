@@ -1727,7 +1727,7 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
     if (l_Adapter->m_dhcpv6_enabled)
       {
 	const ETH_HEADER *eth = (ETH_HEADER *) l_PacketBuffer->m_Data;
-	const IPV6HDR *ip6 = (IPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER));
+	const IPV6HDR *ip6 = (IPV6HDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER));
 	const UDPHDR *udp = (UDPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IPV6HDR));
 	const ICMPV6_NS *icmp6 = (ICMPV6_NS *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IPV6HDR));
 
@@ -1736,7 +1736,7 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
 		&& eth->proto == htons (ETH_P_IPV6)
 		&& IPH_GET_VER (ip6->version_traffic) == 0x6 // IPv6
 		&& ip6->next_header == IPPROTO_ICMPV6
-		&& icmp6->type == ICMPV6_ROUTER_ADVERTISEMENT
+		&& icmp6->type == ICMPV6_ROUTER_SOLICITATION
 		&& icmp6->code == 0)
 	  {
 	  }
@@ -1761,7 +1761,7 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
 
 	    if (optlen > 0) // we must have at least one DHCP option
 	      {
-		if (ProcessDHCPv6 (l_Adapter, eth, ip, udp, dhcp, optlen))
+		if (ProcessDHCPv6 (l_Adapter, eth, ip6, udp, dhcp6, optlen))
 		  goto no_queue;
 	      }
 	    else

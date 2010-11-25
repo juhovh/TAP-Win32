@@ -187,6 +187,8 @@ typedef struct {
 // (this is just the ICMPv6 part of the packet)
 typedef struct {
   UCHAR    type;
+# define ICMPV6_TYPE_RA 133		// router advertisement
+# define ICMPV6_TYPE_RS 134		// router solicitation
 # define ICMPV6_TYPE_NS	135		// neighbour solicitation
   UCHAR    code;
 # define ICMPV6_CODE_0	0		// no specific sub-code for NS/NA
