@@ -29,6 +29,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 			     const ICMP6 *icmp6,
 			     int optlen)
 {
+  NDRAMsg *pkt;
   IP6ADDR unspecified = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
   // Check packet according to RFC4861 6.1.1.
@@ -37,6 +38,72 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 	|| icmp6->code != 0)
 	|| (IP6ADDR_EQUAL(ip6->saddr, unspecified) && optlen))
     return FALSE;
+
+  pkt = (NDRAMsg *) MemAlloc (sizeof (NDRAMsg), TRUE);
+
+  if (pkt)
+    {
+      int i;
+
+      //--------------------------------------------
+      // Build ICMPv6 ND Router Advertisement packet
+      //--------------------------------------------
+
+      // Build ethernet header
+
+      COPY_MAC (pkt->eth.src, p_Adapter->m_dhcpv6_server_mac);
+      COPY_MAC (pkt->eth.dest, eth->src);
+      pkt->eth.proto = htons (ETH_P_IPV6);
+
+      // Build IPv6 header
+
+      pkt->ip6.version_traffic = (6 << 4);
+      pkt->ip6.payload_len = htons (sizeof (ICMPV6NDRA));
+      pkt->ip6.next_header = IPPROTO_ICMPV6;
+      pkt->ip6.hop_limit = 255;
+      COPY_IP6ADDR (pkt->ip6.saddr, p_Adapter->m_dhcpv6_server_ip);
+      COPY_IP6ADDR (pkt->ip6.daddr, ip6->saddr);
+
+      // Build ICMPv6 ND Router Advertisement packet
+
+      pkt->radv.type = ICMPV6_ROUTER_ADVERTISEMENT;
+      pkt->radv.code = 0;
+      pkt->radv.cur_hop_limit = 0;       // Unspecified
+      pkt->radv.flags = 0xc0;            // Managed | Other
+      pkt->radv.router_lifetime = 1800;  // FIXME: Some reason for this value
+      pkt->radv.reachable_time = 0;
+      pkt->radv.retran_timer = 0;
+
+      // Build ICMPv6 ND Router Advertisement options
+
+      pkt->radv.slla_type = 1;
+      pkt->radv.slla_len = 1;
+      COPY_MAC (pkt->radv.slla_value, p_Adapter->m_dhcpv6_server_mac);
+
+      pkt->radv.pi_type = 3;
+      pkt->radv.pi_len = 4;
+      pkt->radv.pi_prefixlen = p_Adapter->m_dhcpv6_prefixlen;
+      pkt->radv.pi_flags = 0;  // On-link undefined, not autonomous
+      pkt->radv.pi_valid_lifetime = p_Adapter->m_dhcpv6_lease_time;
+      pkt->radv.pi_preferred_lifetime = p_Adapter->m_dhcpv6_lease_time;
+      COPY_IP6ADDR (pkt->radv.prefix, p_Adapter->m_dhcpv6_addr);
+      for (i = 0; i < 128; ++i)
+        {
+          // Zero all host bits in prefix as required
+          pkt->radv.prefix[i/8] &= ~(0x80 >> (i%8));
+        }
+
+      pkt->radv.mtu_type = 5;
+      pkt->radv.mtu_len = 1;
+      pkt->radv.mtu_value = htonl (p_Adapter->m_dhcpv6_mtu);
+
+      InjectPacketDeferred (p_Adapter,
+                            (UCHAR *) pkt,
+                            sizeof (NDRAMsg));
+
+      MemFree (pkt, sizeof (NDRAMsg));
+      return TRUE;
+    }
 
   return FALSE;
 }

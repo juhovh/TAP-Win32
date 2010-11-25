@@ -48,7 +48,7 @@ typedef struct {
   UCHAR   type;
   UCHAR   code;
   USHORT  checksum;
-  UCHAR   hop_limit;
+  UCHAR   cur_hop_limit;
   UCHAR   flags;
   USHORT  router_lifetime;
   ULONG   reachable_time;
@@ -62,7 +62,7 @@ typedef struct {
   // Prefix information option
   UCHAR   pi_type;
   UCHAR   pi_len;
-  UCHAR   pi_prefix_len;
+  UCHAR   pi_prefixlen;
   UCHAR   pi_flags;
   ULONG   pi_valid_lifetime;
   ULONG   pi_preferred_lifetime;
@@ -75,6 +75,12 @@ typedef struct {
   USHORT  mtu_reserved;
   ULONG   mtu_value;
 } ICMP6NDRA;
+
+typedef struct {
+  ETH_HEADER  eth;
+  IP6HDR      ip6;
+  ICMP6NDRA   radv;
+} NDRAMsg;
 
 //=============================
 // The DHCPv6 message structure

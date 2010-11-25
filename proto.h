@@ -34,7 +34,8 @@ typedef unsigned char MACADDR [6];
 typedef unsigned long IPADDR;
 typedef unsigned char IP6ADDR [16];
 
-#define IP6ADDR_EQUAL(a,b)   (memcmp ((a), (b), sizeof (IP6ADDR)) == 0)
+#define COPY_IP6ADDR(dest,src) NdisMoveMemory ((dest), (src), sizeof (IP6ADDR))
+#define IP6ADDR_EQUAL(a,b)     (memcmp ((a), (b), sizeof (IP6ADDR)) == 0)
 
 //-----------------
 // Ethernet address
@@ -137,8 +138,6 @@ typedef struct {
 
   IP6ADDR  saddr;
   IP6ADDR  daddr;
-
-  /* The options start here. */
 } IP6HDR;
 
 //--------------
