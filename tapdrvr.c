@@ -2272,6 +2272,37 @@ TapDeviceHook (IN PDEVICE_OBJECT p_DeviceObject, IN PIRP p_IRP)
 	      break;
 	    }
 
+	  case TAP_IOCTL_CONFIG_DHCPV6_MASQ:
+	    {
+	      break;
+	    }
+
+	  case TAP_IOCTL_CONFIG_DHCPV6_SET_OPT:
+	    {
+	      if (l_IrpSp->Parameters.DeviceIoControl.InputBufferLength <=
+		  DHCPV6_USER_SUPPLIED_OPTIONS_BUFFER_SIZE
+		  && l_Adapter->m_dhcpv6_enabled)
+		{
+		  l_Adapter->m_dhcpv6_user_supplied_options_buffer_len = 0;
+
+		  NdisMoveMemory (l_Adapter->m_dhcpv6_user_supplied_options_buffer,
+				  p_IRP->AssociatedIrp.SystemBuffer,
+				  l_IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+		  
+		  l_Adapter->m_dhcpv6_user_supplied_options_buffer_len = 
+		    l_IrpSp->Parameters.DeviceIoControl.InputBufferLength;
+
+		  p_IRP->IoStatus.Information = 1; // Simple boolean value
+		}
+	      else
+		{
+		  NOTE_ERROR ();
+		  p_IRP->IoStatus.Status = l_Status = STATUS_INVALID_PARAMETER;
+		}
+
+	      break;
+	    }
+
 	  default:
 	    {
 	      NOTE_ERROR ();
