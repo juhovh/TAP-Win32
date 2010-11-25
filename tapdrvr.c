@@ -1566,6 +1566,57 @@ AdapterTransmit (IN NDIS_HANDLE p_AdapterContext,
 	  }
       }
 
+    //=====================================================
+    // Are we running in DHCPv6 server masquerade mode?
+    //
+    // If so, catch both DHCPv6 requests and ND queries
+    // to resolve the address of our virtual DHCP server.
+    //=====================================================
+    if (l_Adapter->m_dhcpv6_enabled)
+      {
+	const ETH_HEADER *eth = (ETH_HEADER *) l_PacketBuffer->m_Data;
+	const IP6HDR *ip6 = (IPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER));
+	const UDPHDR *udp = (UDPHDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IP6HDR));
+	const ICMP6HDR *icmp6 = (ICMP6HDR *) (l_PacketBuffer->m_Data + sizeof (ETH_HEADER) + sizeof (IP6HDR));
+
+	// ICMPv6 Router Advertisement packet?
+	if (l_PacketLength >= sizeof (ETH_HEADER) + sizeof (IP6HDR) + sizeof (ICMP6HDR)
+		&& eth->proto == htons (ETH_P_IPV6)
+		&& IPH_GET_VER (ip6->version_traffic) == 0x6 // IPv6
+		&& ip6->next_header == IPPROTO_ICMPV6
+		&& icmp6->type == ICMPV6_ROUTER_ADVERTISEMENT
+		&& icmp6->code == 0)
+	  {
+	  }
+
+	// DHCPv6 packet?
+	else if (l_PacketLength >= sizeof (ETH_HEADER) + sizeof (IPHDR) + sizeof (UDPHDR) + sizeof (DHCP6)
+		 && eth->proto == htons (ETH_P_IPV6)
+		 && IPH_GET_VER (ip6->version_traffic) == 0x6 // IPv6
+		 && ip6->next_header == IPPROTO_UDP
+		 && udp->dest == htons (DHCPV6_SERVER_PORT))
+	  {
+	    const DHCP6 *dhcp6 = (DHCP6 *) (l_PacketBuffer->m_Data
+					    + sizeof (ETH_HEADER)
+					    + sizeof (IP6HDR)
+					    + sizeof (UDPHDR));
+
+	    const int optlen = l_PacketLength
+	      - sizeof (ETH_HEADER)
+	      - sizeof (IP6HDR)
+	      - sizeof (UDPHDR)
+	      - sizeof (DHCP6);
+
+	    if (optlen > 0) // we must have at least one DHCP option
+	      {
+		if (ProcessDHCPv6 (l_Adapter, eth, ip, udp, dhcp, optlen))
+		  goto no_queue;
+	      }
+	    else
+	      goto no_queue;
+	  }
+      }
+
     //===============================================
     // In Point-To-Point mode, check to see whether
     // packet is ARP or IPv4 (if neither, then drop).

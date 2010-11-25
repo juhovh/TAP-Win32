@@ -129,7 +129,7 @@ typedef struct {
   USHORT   flow_label;
   USHORT   payload_len;
 
-#define IPPROTO_ICMPV6  58  /* ICMPv6 protocol */
+# define IPPROTO_ICMPV6  58  /* ICMPv6 protocol */
   UCHAR    next_header;
   UCHAR    hop_limit;
 
@@ -138,6 +138,17 @@ typedef struct {
 
   /* The options start here. */
 } IP6HDR;
+
+//--------------
+// ICMPv6 header
+//--------------
+
+typedef struct {
+# define ICMPV6_ROUTER_ADVERTISEMENT
+  UCHAR    type;
+  UCHAR    code;
+  USHORT   checksum;
+} ICMP6HDR;
 
 //-----------
 // UDP header
