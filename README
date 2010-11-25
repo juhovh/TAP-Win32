@@ -1,0 +1,33 @@
+
+The configuration format and some additional notes
+--------------------------------------------------
+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                                                               |
+      +                                                               +
+      |                                                               |
+      +                            Address                            +
+      |                                                               |
+      +                                                               +
+      |                                                               |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      | Prefix Length |                   Reserved                    |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                              MTU                              |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |                            Lifetime                           |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+- There can be many DHCPv6 servers in IPv6, so the packets should not be dropped
+- Router address should not be set by DHCPv6, if there are routers present in the
+  the VPN they should send their own router advertisements and prefixes
+- The sent router advertisement has zero router lifetime to indicate no routing
+- Same lifetime is set for both prefix and DHCPv6 acquired address, the client can
+  renew the address at the time they wish, since T1 and T2 are both set to zero
+- The MTU of the local network prefix can be configured through the interface,
+  but it can not be higher than the adapter MTU or lower than 1280. It is also
+  worth to notice that other advertised prefixes can have a different MTU, but in
+  general this should not be a problem, because IPv6 uses path MTU discovery.
+
