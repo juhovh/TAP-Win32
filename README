@@ -30,4 +30,4 @@ The configuration format and some additional notes
   but it can not be higher than the adapter MTU or lower than 1280. It is also
   worth to notice that other advertised prefixes can have a different MTU, but in
   general this should not be a problem, because IPv6 uses path MTU discovery.
-
+- DHCPv6 option buffers double the DHCPv4 buffers, because DHCPv6 options larger

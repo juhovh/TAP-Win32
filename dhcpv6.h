@@ -28,8 +28,8 @@
 // Maximum number of DHCPv6 options bytes supplied
 //================================================
 
-#define DHCPV6_USER_SUPPLIED_OPTIONS_BUFFER_SIZE 256
-#define DHCPV6_OPTIONS_BUFFER_SIZE               256
+#define DHCPV6_USER_SUPPLIED_OPTIONS_BUFFER_SIZE 512
+#define DHCPV6_OPTIONS_BUFFER_SIZE               512
 
 //=====================================
 // UDP port numbers of DHCPv6 messages.
@@ -91,7 +91,58 @@ typedef struct {
   USHORT lid;
 } DHCP6;
 
+typedef struct {
+  ETH_HEADER  eth;
+  IP6HDR      ip6;
+  UDPHDR      udp;
+  DHCP6       dhcp6;
+} DHCP6Pre;
+
+typedef struct {
+  USHORT   code;
+  USHORT   len;
+  USHORT   type;
+  USHORT   hwtype;
+  MACADDR  macaddr;
+} DHCP6OptServerID;
+
+typedef struct {
+  USHORT  code;
+  USHORT  len;
+  ULONG   iaid;
+  ULONG   t1;
+  ULONG   t2;
+
+  // IA Address option
+  USHORT  ia_code;
+  USHORT  ia_len;
+  IP6ADDR ia_addr;
+  ULONG   ia_preferred_lifetime;
+  ULONG   ia_valid_lifetime;
+} DHCP6OptIANA;
+
+typedef struct {
+  DHCP6Pre    pre;
+  UCHAR       options[DHCPV6_OPTIONS_BUFFER_SIZE];
+} DHCP6Full;
+
+typedef struct {
+  unsigned int optlen;
+  BOOLEAN overflow;
+  DHCP6Full msg;
+} DHCP6Msg;
+
 #pragma pack()
+
+//====================
+// Macros for DHCP6Msg
+//====================
+
+#define DHCP6MSG_LEN_BASE(p) (sizeof (DHCP6Pre))
+#define DHCP6MSG_LEN_OPT(p)  ((p)->optlen)
+#define DHCP6MSG_LEN_FULL(p) (DHCP6MSG_LEN_BASE(p) + DHCP6MSG_LEN_OPT(p))
+#define DHCP6MSG_BUF(p)      ((UCHAR*) &(p)->msg)
+#define DHCP6MSG_OVERFLOW(p)  ((p)->overflow)
 
 //====================
 // DHCPv6 Option types
@@ -114,5 +165,4 @@ typedef struct {
 //=====================
 // DHCPv6 Message types
 //=====================
-
 
