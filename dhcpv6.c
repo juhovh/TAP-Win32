@@ -136,7 +136,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
     return TRUE;
 
   // Does this message belong to us?
-  if (!RouterSolicitationOurs (p_adapter, eth, ip6, icmp6))
+  if (!RouterSolicitationOurs (p_Adapter, eth, ip6, icmp6))
     return FALSE;
 
   pkt = (NDRAMsg *) MemAlloc (sizeof (NDRAMsg), TRUE);
@@ -238,13 +238,13 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
     return TRUE;
 
   // Does this message belong to us?
-  if (!DHCPv6MessageOurs (p_adapter, eth, ip6, udp, dhcp6))
+  if (!DHCPv6MessageOurs (p_Adapter, eth, ip6, udp, dhcp6))
     return FALSE;
 
   // Accept only SOLICIT, REQUEST and RENEW
-  if (!(dhcpv6->type == DHCPV6_SOLICIT
-	|| dhcpv6->type == DHCPV6_REQUEST
-	|| dhcpv6->type == DHCPV6_RENEW))
+  if (!(dhcp6->type == DHCPV6_SOLICIT
+	|| dhcp6->type == DHCPV6_REQUEST
+	|| dhcp6->type == DHCPV6_RENEW))
     return FALSE;
 
   

@@ -97,7 +97,7 @@ typedef struct {
 // DHCPv6 Option types
 //====================
 
-#define DHCPv6_SOLICIT      1
+#define DHCPV6_SOLICIT      1
 #define DHCPV6_ADVERTISE    2
 #define DHCPV6_REQUEST      3
 #define DHCPV6_CONFIRM      4
