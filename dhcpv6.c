@@ -125,12 +125,12 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
   IP6ADDR unspecified = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
   // Sanity check IP header
-  if (!(ntohs (ip6->payload_len) == sizeof (IP6HDR) + sizeof (ICMP6) + optlen))
+  if (!(ntohs (ip6->payload_len) == sizeof (ICMP6) + optlen))
     return TRUE;
 
   // Check packet according to RFC4861 6.1.1.
   if (ip6->hop_limit != 255
-	|| ip6->payload_len < 8
+	|| ip6->payload_len < sizeof (ICMP6)
 	|| icmp6->code != 0
 	|| (IP6ADDR_EQUAL(ip6->saddr, unspecified) && optlen != 0))
     return TRUE;
@@ -234,7 +234,7 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
 	       int optlen)
 {
   // Sanity check IP header
-  if (!(ntohs (ip6->payload_len) == sizeof (IP6HDR) + sizeof (UDPHDR) + sizeof (DHCP6) + optlen))
+  if (!(ntohs (ip6->payload_len) == sizeof (UDPHDR) + sizeof (DHCP6) + optlen))
     return TRUE;
 
   // Does this message belong to us?
