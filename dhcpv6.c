@@ -449,6 +449,8 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
 	       const DHCP6 *dhcp6,
 	       int optlen)
 {
+  UCHAR response_type;
+
   // Sanity check IP header
   if (!(ntohs (ip6->payload_len) == sizeof (UDPHDR) + sizeof (DHCP6) + optlen))
     return TRUE;
@@ -457,14 +459,16 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
   if (!DHCPv6MessageOurs (p_Adapter, eth, ip6, udp, dhcp6))
     return FALSE;
 
-  // Accept only SOLICIT, REQUEST and RENEW
-  if (!(dhcp6->type == DHCPV6_SOLICIT
-	|| dhcp6->type == DHCPV6_REQUEST
-	|| dhcp6->type == DHCPV6_RENEW))
+  // Determine the correct response message type
+  if (dhcp6->type == DHCPV6_SOLICIT)
+    response_type = DHCPV6_ADVERTISE;
+  else if (dhcp6->type == DHCPV6_REQUEST || dhcp6->type == DHCPV6_RENEW)
+    response_type = DHCPV6_REPLY;
+  else
     return FALSE;
 
   // Attempt to send reply, drop packet if fails (invalid packet)
-  if (!SendDHCPv6Msg (p_Adapter, DHCPV6_ADVERTISE, eth, ip6, udp, dhcp6, optlen))
+  if (!SendDHCPv6Msg (p_Adapter, response_type, eth, ip6, udp, dhcp6, optlen))
     return TRUE;
 
   return FALSE;
