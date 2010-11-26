@@ -22,9 +22,6 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "OpenVPN"
 
-/* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "openvpn"
-
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "2.1.4"
 
