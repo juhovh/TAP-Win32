@@ -2062,32 +2062,6 @@ TapDeviceHook (IN PDEVICE_OBJECT p_DeviceObject, IN PIRP p_IRP)
 
 		  CheckIfDhcpAndTunMode (l_Adapter);
 
-		  // FIXME: Remove everything starting from here later
-		  l_Adapter->m_dhcpv6_enabled = TRUE;
-		  l_Adapter->m_dhcpv6_server_radv = TRUE;
-		  l_Adapter->m_dhcpv6_addr[0] = 0x20;
-		  l_Adapter->m_dhcpv6_addr[1] = 0x01;
-		  l_Adapter->m_dhcpv6_addr[2] = 0x12;
-		  l_Adapter->m_dhcpv6_addr[3] = 0x34;
-		  l_Adapter->m_dhcpv6_addr[7] = 0x02;
-		  l_Adapter->m_dhcpv6_addr[14] = 0x01;
-		  l_Adapter->m_dhcpv6_addr[15] = 0x02;
-		  l_Adapter->m_dhcpv6_prefixlen = 64;
-		  l_Adapter->m_dhcpv6_mtu = 1500;
-		  GenerateRelatedMAC (l_Adapter->m_dhcpv6_server_mac, l_Adapter->m_MAC, 2);
-		  l_Adapter->m_dhcpv6_server_ip[0] = 0xfe;
-		  l_Adapter->m_dhcpv6_server_ip[1] = 0x80;
-		  l_Adapter->m_dhcpv6_server_ip[8] = (UCHAR) (l_Adapter->m_dhcpv6_server_mac[0]^0x02);
-		  l_Adapter->m_dhcpv6_server_ip[9] = l_Adapter->m_dhcpv6_server_mac[1];
-		  l_Adapter->m_dhcpv6_server_ip[10] = l_Adapter->m_dhcpv6_server_mac[2];
-		  l_Adapter->m_dhcpv6_server_ip[11] = 0xff;
-		  l_Adapter->m_dhcpv6_server_ip[12] = 0xfe;
-		  l_Adapter->m_dhcpv6_server_ip[13] = l_Adapter->m_dhcpv6_server_mac[3];
-		  l_Adapter->m_dhcpv6_server_ip[14] = l_Adapter->m_dhcpv6_server_mac[4];
-		  l_Adapter->m_dhcpv6_server_ip[15] = l_Adapter->m_dhcpv6_server_mac[5];
-		  l_Adapter->m_dhcpv6_lease_time = 86000;
-		  // FIXME: Remove everything ending here later
-
 		  p_IRP->IoStatus.Information = 1; // Simple boolean value
 		}
 	      else
@@ -2127,6 +2101,45 @@ TapDeviceHook (IN PDEVICE_OBJECT p_DeviceObject, IN PIRP p_IRP)
 
 	  case TAP_IOCTL_CONFIG_DHCPV6_MASQ:
 	    {
+	      if (l_IrpSp->Parameters.DeviceIoControl.InputBufferLength >=
+		  (sizeof (IP6ADDR) + 3*sizeof (ULONG)))
+		{
+		  l_Adapter->m_dhcpv6_enabled = FALSE;
+		  l_Adapter->m_dhcpv6_server_radv = FALSE;
+		  l_Adapter->m_dhcpv6_user_supplied_options_buffer_len = 0;
+
+		  COPY_IP6ADDR (l_Adapter->m_dhcpv6_addr,
+			        (UCHAR *)p_IRP->AssociatedIrp.SystemBuffer);
+		  l_Adapter->m_dhcpv6_prefixlen =
+			((UCHAR *)p_IRP->AssociatedIrp.SystemBuffer)[16];
+		  l_Adapter->m_dhcpv6_mtu =
+			((ULONG *)p_IRP->AssociatedIrp.SystemBuffer)[5];
+		  l_Adapter->m_dhcpv6_lease_time =
+			((ULONG *)p_IRP->AssociatedIrp.SystemBuffer)[6];
+
+		  GenerateRelatedMAC (l_Adapter->m_dhcpv6_server_mac, l_Adapter->m_MAC, 2);
+		  l_Adapter->m_dhcpv6_server_ip[0] = 0xfe;
+		  l_Adapter->m_dhcpv6_server_ip[1] = 0x80;
+		  l_Adapter->m_dhcpv6_server_ip[8] = (UCHAR) (l_Adapter->m_dhcpv6_server_mac[0]^0x02);
+		  l_Adapter->m_dhcpv6_server_ip[9] = l_Adapter->m_dhcpv6_server_mac[1];
+		  l_Adapter->m_dhcpv6_server_ip[10] = l_Adapter->m_dhcpv6_server_mac[2];
+		  l_Adapter->m_dhcpv6_server_ip[11] = 0xff;
+		  l_Adapter->m_dhcpv6_server_ip[12] = 0xfe;
+		  l_Adapter->m_dhcpv6_server_ip[13] = l_Adapter->m_dhcpv6_server_mac[3];
+		  l_Adapter->m_dhcpv6_server_ip[14] = l_Adapter->m_dhcpv6_server_mac[4];
+		  l_Adapter->m_dhcpv6_server_ip[15] = l_Adapter->m_dhcpv6_server_mac[5];
+
+		  l_Adapter->m_dhcpv6_enabled = TRUE;
+		  l_Adapter->m_dhcpv6_server_radv = TRUE;
+
+		  p_IRP->IoStatus.Information = 1; // Simple boolean value
+		}
+	      else
+		{
+		  NOTE_ERROR ();
+		  p_IRP->IoStatus.Status = l_Status = STATUS_INVALID_PARAMETER;
+		}
+
 	      break;
 	    }
 
