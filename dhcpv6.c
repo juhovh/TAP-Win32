@@ -415,7 +415,7 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
 	  checksum = ipv6_checksum ((UCHAR *) &pkt->msg.pre.udp,
 				    sizeof (UDPHDR) + sizeof (DHCP6) + pkt->optlen,
 				    &pkt->msg.pre.ip6);
-				    pkt->msg.pre.udp.check = htons (checksum);
+	  pkt->msg.pre.udp.check = htons (checksum);
 
 	  InjectPacketDeferred (p_Adapter,
 				DHCPMSG_BUF (pkt),

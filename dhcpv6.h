@@ -142,7 +142,7 @@ typedef struct {
 #define DHCP6MSG_LEN_OPT(p)  ((p)->optlen)
 #define DHCP6MSG_LEN_FULL(p) (DHCP6MSG_LEN_BASE(p) + DHCP6MSG_LEN_OPT(p))
 #define DHCP6MSG_BUF(p)      ((UCHAR*) &(p)->msg)
-#define DHCP6MSG_OVERFLOW(p)  ((p)->overflow)
+#define DHCP6MSG_OVERFLOW(p) ((p)->overflow)
 
 //====================
 // DHCPv6 Option types
