@@ -97,7 +97,19 @@ typedef struct {
 // DHCPv6 Option types
 //====================
 
-
+#define DHCPv6_SOLICIT      1
+#define DHCPV6_ADVERTISE    2
+#define DHCPV6_REQUEST      3
+#define DHCPV6_CONFIRM      4
+#define DHCPV6_RENEW        5
+#define DHCPV6_REBIND       6
+#define DHCPV6_REPLY        7
+#define DHCPV6_RELEASE      8
+#define DHCPV6_DECLINE      9
+#define DHCPV6_RECONFIGURE  10
+#define DHCPV6_INFORMATION_REQUEST 11
+#define DHCPV6_RELAY_FORW   12
+#define DHCPV6_RELAY_REPL   13
 
 //=====================
 // DHCPv6 Message types

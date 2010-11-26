@@ -51,6 +51,70 @@ ipv6_checksum (const UCHAR *buf,
 }
 
 BOOLEAN
+RouterSolicitationOurs (const TapAdapterPointer p_Adapter,
+			const ETH_HEADER *eth,
+			const IP6HDR *ip6,
+			const ICMP6 *icmp6)
+{
+  MACADDR mac_all_routers = { 0x33,0x33,0x00,0x00,0x00,0x02 };
+  IP6ADDR ip6_all_routers = { 0xff,0x02,0,0,0,0,0,0,0,0,0,0,0,0,0,2 };
+
+  // Must be ICMPv6 protocol
+  if (!(eth->proto == htons (ETH_P_IPV6) && ip6->next_header == IPPROTO_ICMPV6))
+    return FALSE;
+
+  // Source MAC must be our adapter
+  if (!MAC_EQUAL (eth->src, p_Adapter->m_MAC))
+    return FALSE;
+
+  // Dest MAC must be all routers multicast or our virtual server
+  if (!(MAC_EQUAL (eth->dest, mac_all_routers)
+	|| MAC_EQUAL (eth->dest, p_Adapter->m_dhcpv6_server_mac)))
+    return FALSE;
+
+  // Dest IPv6 address must be all routers or our virtual server
+  if (!(IP6ADDR_EQUAL (ip6->daddr, ip6_all_routers)
+	|| IP6ADDR_EQUAL (ip6->daddr, p_Adapter->m_dhcpv6_server_ip)))
+    return FALSE;
+
+  return TRUE;
+}
+
+BOOLEAN
+DHCPv6MessageOurs (const TapAdapterPointer p_Adapter,
+		   const ETH_HEADER *eth,
+		   const IP6HDR *ip6,
+		   const UDPHDR *udp,
+		   const DHCP6 *dhcp6)
+{
+  MACADDR mac_all_dhcp_servers = { 0x33,0x33,0x00,0x01,0x00,0x02 };
+  IP6ADDR ip6_all_dhcp_servers = { 0xff,0x02,0,0,0,0,0,0,0,0,0,0,0,1,0,2 };
+
+  // Must be UDPv6 protocol
+  if (!(eth->proto == htons (ETH_P_IPV6) && ip6->next_header == IPPROTO_UDP))
+    return FALSE;
+
+  // Source MAC must be our adapter
+  if (!MAC_EQUAL (eth->src, p_Adapter->m_MAC))
+    return FALSE;
+
+  // Dest MAC must be All_DHCP_Relay_Agents_and_Servers
+  if (!MAC_EQUAL (eth->dest, mac_all_dhcp_servers))
+    return FALSE;
+
+  // Dest IPv6 address must be All_DHCP_Relay_Agents_and_Servers
+  if (!IP6ADDR_EQUAL (ip6->daddr, ip6_all_dhcp_servers))
+    return FALSE;
+
+  // Port numbers must be correct
+  if (!(udp->dest == htons (DHCPV6_SERVER_PORT)
+	&& udp->source == htons (DHCPV6_CLIENT_PORT)))
+    return FALSE;
+
+  return TRUE;
+}
+
+BOOLEAN
 ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 			     const ETH_HEADER *eth,
 			     const IP6HDR *ip6,
@@ -60,11 +124,19 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
   NDRAMsg *pkt;
   IP6ADDR unspecified = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
+  // Sanity check IP header
+  if (!(ntohs (ip6->payload_len) == sizeof (IP6HDR) + sizeof (ICMP6) + optlen))
+    return TRUE;
+
   // Check packet according to RFC4861 6.1.1.
   if (ip6->hop_limit != 255
 	|| ip6->payload_len < 8
 	|| icmp6->code != 0
 	|| (IP6ADDR_EQUAL(ip6->saddr, unspecified) && optlen != 0))
+    return TRUE;
+
+  // Does this message belong to us?
+  if (!RouterSolicitationOurs (p_adapter, eth, ip6, icmp6))
     return FALSE;
 
   pkt = (NDRAMsg *) MemAlloc (sizeof (NDRAMsg), TRUE);
@@ -140,7 +212,6 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
                             sizeof (NDRAMsg));
 
       MemFree (pkt, sizeof (NDRAMsg));
-      return TRUE;
     }
 
   return FALSE;
@@ -162,5 +233,21 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
 	       const DHCP6 *dhcp6,
 	       int optlen)
 {
+  // Sanity check IP header
+  if (!(ntohs (ip6->payload_len) == sizeof (IP6HDR) + sizeof (UDPHDR) + sizeof (DHCP6) + optlen))
+    return TRUE;
+
+  // Does this message belong to us?
+  if (!DHCPv6MessageOurs (p_adapter, eth, ip6, udp, dhcp6))
+    return FALSE;
+
+  // Accept only SOLICIT, REQUEST and RENEW
+  if (!(dhcpv6->type == DHCPV6_SOLICIT
+	|| dhcpv6->type == DHCPV6_REQUEST
+	|| dhcpv6->type == DHCPV6_RENEW))
+    return FALSE;
+
+  
+
   return FALSE;
 }
