@@ -35,8 +35,8 @@
 // UDP port numbers of DHCPv6 messages.
 //=====================================
 
-#define DHCPV6_SERVER_PORT 546
 #define DHCPV6_CLIENT_PORT 546
+#define DHCPV6_SERVER_PORT 547
 
 //=============================================
 // The ICMPv6 ND Router Advertisement structure
@@ -97,6 +97,11 @@ typedef struct {
   UDPHDR      udp;
   DHCP6       dhcp6;
 } DHCP6Pre;
+
+typedef struct {
+  USHORT   code;
+  USHORT   len;
+} DHCP6Opt;
 
 typedef struct {
   USHORT   code;

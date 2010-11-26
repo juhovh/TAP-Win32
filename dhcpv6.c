@@ -325,6 +325,14 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
 {
   DHCP6Msg *pkt;
 
+  UCHAR *optbuf;
+  int optbufidx;
+
+  BOOLEAN has_iaid;
+  ULONG iaid = 0;
+  UCHAR *clientid = NULL;
+  int clientidlen = 0;
+
   if (!(type == DHCPV6_ADVERTISE
 	|| type == DHCPV6_REPLY
 	|| type == DHCPV6_DECLINE))
@@ -333,62 +341,54 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
       return FALSE;
     }
 
+  //---------------------
+  // Check DHCPv6 options
+  //---------------------
+
+  optbuf = (UCHAR *) (dhcp6 + 1);
+  optbufidx = 0;
+  while (optbufidx+4 < optlen)
+    {
+      DHCP6Opt *opt = (DHCP6Opt *)(optbuf+optbufidx);
+      USHORT opt_code = ntohs (opt->code);
+      USHORT opt_len = ntohs (opt->len);
+
+      if (!opt_len || opt_len > optlen-optbufidx-4)
+	break;
+
+      if (opt_code == 1)
+	{
+	  // Client identifier found
+	  clientid = optbuf+optbufidx;
+	  clientidlen = 4+opt_len;
+	}
+      else if (opt_code == 3)
+	{
+	  // Identity Association for Non-temporary Address found
+	  DHCP6OptIANA *iana_opt = (DHCP6OptIANA *)(optbuf+optbufidx);
+	  iaid = ntohl (iana_opt->iaid);
+	  has_iaid = TRUE;
+	}
+
+      optbufidx += 4+opt_len;
+    }
+
+  // Invalid options found, return failure
+  if (optbufidx != optlen)
+    return FALSE;
+
+  // Make sure solicitation has required options
+  if (!clientid || !has_iaid)
+    return FALSE;
+
   pkt = (DHCP6Msg *) MemAlloc (sizeof (DHCP6Msg), TRUE);
-  
+
   if (pkt)
     {
-      UCHAR *optbuf;
-      int optbufidx;
-
-      BOOLEAN has_iaid;
-      ULONG iaid = 0;
-      UCHAR *clientid = NULL;
-      int clientidlen = 0;
 
       //---------------------
       // Build DHCPv6 options
       //---------------------
-
-      optbuf = (UCHAR *) (dhcp6 + 1);
-      optbufidx = 0;
-      while (optbufidx+4 < optlen)
-        {
-	  USHORT optcode = ((USHORT *)(optbuf+optbufidx))[0];
-	  USHORT optlen = ((USHORT *)(optbuf+optbufidx))[1];
-
-	  if (optlen > optlen-optbufidx-4)
-	    break;
-
-	  if (optcode == ntohs (1))
-	    {
-	      // Client identifier found
-	      clientid = optbuf+optbufidx;
-	      clientidlen = 4+optlen;
-	    }
-	  else if (optcode == ntohs (3))
-	    {
-	      // Identity Association for Non-temporary Address found
-	      DHCP6OptIANA *iana_opt = (DHCP6OptIANA *)(optbuf+optbufidx);
-	      iaid = ntohl(iana_opt->iaid);
-	      has_iaid = TRUE;
-	    }
-
-	  optbufidx += 4+optlen;
-	}
-
-      // Invalid options found, return failure
-      if (optbufidx != optlen)
-        {
-	  MemFree (pkt, sizeof (DHCP6Msg));
-	  return FALSE;
-	}
-
-      // Make sure solicitation has required options
-      if (!clientid || !has_iaid)
-        {
-	  MemFree (pkt, sizeof (DHCP6Msg));
-	  return FALSE;
-        }
 
       SetDHCP6Opt (pkt, clientid, clientidlen);
       SetDHCP6OptServerID (pkt, p_Adapter->m_dhcpv6_server_mac);
