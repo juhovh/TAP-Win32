@@ -337,6 +337,8 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
   ULONG iaid = 0;
   UCHAR *clientid = NULL;
   int clientidlen = 0;
+  UCHAR *serverid = NULL;
+  int serveridlen = 0;
 
   if (!(type == DHCPV6_ADVERTISE
 	|| type == DHCPV6_REPLY
@@ -367,6 +369,12 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
 	  clientid = optbuf+optbufidx;
 	  clientidlen = 4+opt_len;
 	}
+      else if (opt_code == 2)
+	{
+	  // Server identifier found
+	  serverid = optbuf+optbufidx;
+	  serveridlen = 4+opt_len;
+	}
       else if (opt_code == 3)
 	{
 	  // Identity Association for Non-temporary Address found
@@ -382,9 +390,34 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
   if (optbufidx != optlen)
     return FALSE;
 
-  // Make sure solicitation has required options
-  if (!clientid || !has_iaid)
-    return FALSE;
+  // Make sure solicitation options are valid
+  if (dhcp6->type == DHCPV6_SOLICITATION)
+    {
+      if (!clientid || !has_iaid)
+	return FALSE;
+    }
+  // Make sure request/renew options are valid
+  else if (dhcp6->type == DHCPV6_REQUEST || dhcp6->type == DHCPV6_RENEW)
+    {
+      DHCP6OptServerID *sid;
+
+      // Check that all required options are present
+      if (!clientid || !serverid || !has_iaid)
+	return FALSE;
+
+      // If the server ID is ours, the length should match
+      if (serveridlen != sizeof(DHCP6OptServerID))
+	return FALSE;
+
+      // Check that fields equal the ones set in SetDHCP6OptServerID
+      sid = (DHCP6OptServerId *)serverid;
+      if (ntohs (sid->type) != 3 || ntohs (sid->hwtype) != 1)
+	return FALSE;
+
+      // Check that the identity MAC address matches ours
+      if (!MAC_EQUAL (sid->macaddr, p_Adapter->m_dhcpv6_server_mac))
+	return FALSE;
+    }
 
   pkt = (DHCP6Msg *) MemAlloc (sizeof (DHCP6Msg), TRUE);
 
