@@ -2105,7 +2105,6 @@ TapDeviceHook (IN PDEVICE_OBJECT p_DeviceObject, IN PIRP p_IRP)
 		  (sizeof (IP6ADDR) + 3*sizeof (ULONG)))
 		{
 		  l_Adapter->m_dhcpv6_enabled = FALSE;
-		  l_Adapter->m_dhcpv6_server_radv = FALSE;
 		  l_Adapter->m_dhcpv6_user_supplied_options_buffer_len = 0;
 
 		  COPY_IP6ADDR (l_Adapter->m_dhcpv6_addr,
@@ -2130,7 +2129,6 @@ TapDeviceHook (IN PDEVICE_OBJECT p_DeviceObject, IN PIRP p_IRP)
 		  l_Adapter->m_dhcpv6_server_ip[15] = l_Adapter->m_dhcpv6_server_mac[5];
 
 		  l_Adapter->m_dhcpv6_enabled = TRUE;
-		  l_Adapter->m_dhcpv6_server_radv = TRUE;
 
 		  p_IRP->IoStatus.Information = 1; // Simple boolean value
 		}

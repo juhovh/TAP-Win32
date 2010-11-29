@@ -164,7 +164,6 @@ typedef struct _TapAdapter
   UCHAR m_dhcpv6_prefixlen;
   ULONG m_dhcpv6_mtu;
   IP6ADDR m_dhcpv6_server_ip;
-  BOOLEAN m_dhcpv6_server_radv;
   MACADDR m_dhcpv6_server_mac;
   ULONG m_dhcpv6_lease_time;
   UCHAR m_dhcpv6_user_supplied_options_buffer[DHCPV6_USER_SUPPLIED_OPTIONS_BUFFER_SIZE];

@@ -188,7 +188,6 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 
   // Check packet according to RFC4861 6.1.1.
   if (ip6->hop_limit != 255
-	|| ip6->payload_len < sizeof (ICMP6)
 	|| icmp6->code != 0
 	|| (IP6ADDR_EQUAL(ip6->saddr, unspecified) && optlen != 0))
     return TRUE;
@@ -235,10 +234,12 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
 
       // Build ICMPv6 ND Router Advertisement options
 
+      // Source link-layer address
       pkt->radv.slla_type = 1;
       pkt->radv.slla_len = 1;
       COPY_MAC (pkt->radv.slla_value, p_Adapter->m_dhcpv6_server_mac);
 
+      // Maximum transfer unit
       pkt->radv.mtu_type = 5;
       pkt->radv.mtu_len = 1;
       if (p_Adapter->m_dhcpv6_mtu && p_Adapter->m_dhcpv6_mtu < p_Adapter->m_MTU)
@@ -246,6 +247,7 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
       else
         pkt->radv.mtu_value = htonl (p_Adapter->m_MTU);
 
+      // Prefix information
       pkt->radv.pi_type = 3;
       pkt->radv.pi_len = 4;
       pkt->radv.pi_prefixlen = p_Adapter->m_dhcpv6_prefixlen;
@@ -260,10 +262,13 @@ ProcessNDRouterSolicitation (TapAdapterPointer p_Adapter,
         }
 
       // Calculate the ICMPv6 checksum
+
       checksum = ipv6_checksum ((UCHAR *) &(pkt->radv),
                                 sizeof (ICMP6NDRA),
                                 &pkt->ip6);
       pkt->radv.checksum = htons (checksum);
+
+      // Inject the router advertisement packet
 
       InjectPacketDeferred (p_Adapter,
                             (UCHAR *) pkt,
