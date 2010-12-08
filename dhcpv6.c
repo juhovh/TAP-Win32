@@ -391,10 +391,15 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
     return FALSE;
 
   // Make sure solicitation options are valid
-  if (dhcp6->type == DHCPV6_SOLICITATION)
+  if (dhcp6->type == DHCPV6_SOLICIT)
     {
-      if (!clientid || !has_iaid)
+      if (!clientid || serverid || !has_iaid)
 	return FALSE;
+    }
+  else if (dhcp6->type == DHCPV6_CONFIRM)
+    {
+      if (!clientid || serverid || !has_iaid)
+        return FALSE;
     }
   // Make sure request/renew options are valid
   else if (dhcp6->type == DHCPV6_REQUEST || dhcp6->type == DHCPV6_RENEW)
@@ -410,7 +415,7 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
 	return FALSE;
 
       // Check that fields equal the ones set in SetDHCP6OptServerID
-      sid = (DHCP6OptServerId *)serverid;
+      sid = (DHCP6OptServerID *)serverid;
       if (ntohs (sid->type) != 3 || ntohs (sid->hwtype) != 1)
 	return FALSE;
 
@@ -500,7 +505,9 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
   // Determine the correct response message type
   if (dhcp6->type == DHCPV6_SOLICIT)
     response_type = DHCPV6_ADVERTISE;
-  else if (dhcp6->type == DHCPV6_REQUEST || dhcp6->type == DHCPV6_RENEW)
+  else if (dhcp6->type == DHCPV6_REQUEST ||
+	   dhcp6->type == DHCPV6_CONFIRM ||
+	   dhcp6->type == DHCPV6_RENEW)
     response_type = DHCPV6_REPLY;
   else
     return FALSE;
