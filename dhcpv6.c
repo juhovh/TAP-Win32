@@ -48,6 +48,17 @@ SetDHCP6Opt (DHCP6Msg *m, void *data, unsigned int len)
 }
 
 VOID
+SetDHCP6OptStatusCode (DHCP6Msg *msg,
+		       USHORT status)
+{
+  DHCP6OptStatusCode opt;
+  opt.code = htons (13);
+  opt.len = htons (2);
+  opt.status = htons (status);
+  SetDHCP6Opt (msg, &opt, sizeof (opt));
+}
+
+VOID
 SetDHCP6OptServerID (DHCP6Msg *msg,
 		     MACADDR addr)
 {
@@ -402,7 +413,9 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
         return FALSE;
     }
   // Make sure request/renew options are valid
-  else if (dhcp6->type == DHCPV6_REQUEST || dhcp6->type == DHCPV6_RENEW)
+  else if (dhcp6->type == DHCPV6_REQUEST ||
+	   dhcp6->type == DHCPV6_RENEW ||
+	   dhcp6->type == DHCPV6_RELEASE)
     {
       DHCP6OptServerID *sid;
 
@@ -432,14 +445,22 @@ SendDHCPv6Msg (TapAdapterPointer p_Adapter,
       //---------------------
       // Build DHCPv6 options
       //---------------------
-
-      SetDHCP6Opt (pkt, clientid, clientidlen);
-      SetDHCP6OptServerID (pkt, p_Adapter->m_dhcpv6_server_mac);
-      SetDHCP6OptIANA (pkt, iaid, p_Adapter->m_dhcpv6_addr,
-		       p_Adapter->m_dhcpv6_lease_time);
-      SetDHCP6Opt (pkt,
-		   p_Adapter->m_dhcpv6_user_supplied_options_buffer,
-		   p_Adapter->m_dhcpv6_user_supplied_options_buffer_len);
+      if (dhcp6->type == DHCPV6_RELEASE)
+	{
+	  SetDHCP6OptStatusCode (pkt, 0);
+	  SetDHCP6Opt (pkt, clientid, clientidlen);
+	  SetDHCP6OptServerID (pkt, p_Adapter->m_dhcpv6_server_mac);
+	}
+      else
+	{
+	  SetDHCP6Opt (pkt, clientid, clientidlen);
+	  SetDHCP6OptServerID (pkt, p_Adapter->m_dhcpv6_server_mac);
+	  SetDHCP6OptIANA (pkt, iaid, p_Adapter->m_dhcpv6_addr,
+			   p_Adapter->m_dhcpv6_lease_time);
+	  SetDHCP6Opt (pkt,
+		       p_Adapter->m_dhcpv6_user_supplied_options_buffer,
+		       p_Adapter->m_dhcpv6_user_supplied_options_buffer_len);
+	}
       
       if (!DHCP6MSG_OVERFLOW (pkt))
         {

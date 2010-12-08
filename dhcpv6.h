@@ -106,6 +106,12 @@ typedef struct {
 typedef struct {
   USHORT   code;
   USHORT   len;
+  USHORT   status;
+} DHCP6OptStatusCode;
+
+typedef struct {
+  USHORT   code;
+  USHORT   len;
   USHORT   type;
   USHORT   hwtype;
   MACADDR  macaddr;
