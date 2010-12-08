@@ -527,7 +527,6 @@ ProcessDHCPv6 (TapAdapterPointer p_Adapter,
   if (dhcp6->type == DHCPV6_SOLICIT)
     response_type = DHCPV6_ADVERTISE;
   else if (dhcp6->type == DHCPV6_REQUEST ||
-	   dhcp6->type == DHCPV6_CONFIRM ||
 	   dhcp6->type == DHCPV6_RENEW)
     response_type = DHCPV6_REPLY;
   else
